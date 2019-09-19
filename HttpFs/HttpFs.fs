@@ -686,7 +686,13 @@ module Client =
                 | UserAgent value                  -> add "User-Agent" value
                 | RequestHeader.Via value          -> add "Via" value
                 | RequestHeader.Warning value      -> add "Warning" value
-                | Custom (customName, customValue) -> add customName customValue)
+                | Custom (customName, customValue) -> if customName.ToLowerInvariant().StartsWith("content-") then
+                                                        addContent (fun c ->
+                                                          c.Headers.Remove(customName) |> ignore
+                                                          c.Headers.TryAddWithoutValidation(customName, customValue) |> ignore)
+                                                      else
+                                                        add customName customValue
+                )
                 headers
 
     // Sets cookies on HttpRequestMessage.
